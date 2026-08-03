@@ -6,7 +6,7 @@ on:
     paths:
       - "apps/test-react/**"
       - "packages/decoder-qr-pago-movil/**"
-      - ".github/workflows/deploy-p2pme-scan.yml"
+      - ".github/workflows/deploy-decoder-qr-pago-movil.yml"
 
 jobs:
   deploy:
