@@ -1,6 +1,6 @@
 # decoder-qr-pago-movil
 
-Decodifica códigos QR del estándar **Suiche 7B** (Pago Móvil Interbancario). Extrae los datos del beneficiario: **dni, phone, bank, name**.
+Decodifica y codifica códigos QR del estándar **Suiche 7B** (Pago Móvil Interbancario). Extrae y genera datos del beneficiario: **dni, phone, bank, name, amount, description, bdv**.
 
 Compatible con más de **58 bancos**. Funciona en **Node.js**, **Bun** y **navegador** (React, Next.js, Vite).
 
@@ -13,6 +13,8 @@ npm install decoder-qr-pago-movil
 ```
 
 ## Uso rápido
+
+### Decodificar
 
 ```ts
 import { decodeQr } from "decoder-qr-pago-movil";
@@ -29,30 +31,84 @@ const result = decodeQr(payload);
 // }
 ```
 
+### Codificar
+
+```ts
+import { encodeQr } from "decoder-qr-pago-movil";
+
+const payload = encodeQr({
+  dni: "12345678",
+  phone: "584120000000",
+  bank: "0114",
+  amount: "150,00",
+});
+
+// payload: "fXr5Kt...?merchantId=0114&origin=app"
+```
+
 ## API
 
 ### `decodeQr(payload: string): QrData`
 
 Parsea y descifra el QR. Retorna:
 
-| Campo   | Tipo     | Ejemplo         |
-| ------- | -------- | --------------- |
-| `dni`   | `string` | `V00000000`     |
-| `phone` | `string` | `584260000000`  |
-| `bank`  | `string` | `0114`          |
-| `name`  | `string` | `Marco Aurelio` |
+| Campo         | Tipo               | Ejemplo         |
+| ------------- | ------------------ | --------------- |
+| `dni`         | `string`           | `V00000000`     |
+| `phone`       | `string`           | `584260000000`  |
+| `bank`        | `string`           | `0114`          |
+| `name`        | `string` (opcional) | `Marco Aurelio` |
+| `amount`      | `string` (opcional) | `150,00`        |
+| `description` | `string` (opcional) | `Pago alquiler` |
+| `bdv`         | `string` (opcional) | `1234567890123456` |
 
 > El campo `id` del JSON original se mapea a `dni` y se le antepone `V` si no lo trae.
 
-### `QrDecoder` (clase)
+### `encodeQr(data: QrData): string`
 
-Para crear múltiples decodificadores o inyectar claves manualmente:
+Genera un payload QR codificado con AES-256-CBC. `bank` es el código del merchant (mismo que `merchantId`). Todos los campos opcionales se incluyen solo si tienen valor.
+
+| Campo         | Tipo    | Obligatorio |
+| ------------- | ------- | ----------- |
+| `dni`         | string  | Sí          |
+| `phone`       | string  | Sí          |
+| `bank`        | string  | Sí          |
+| `name`        | string  | No          |
+| `amount`      | string  | No          |
+| `description` | string  | No          |
+| `bdv`         | string  | No          |
+
+> El `amount` se valida y auto-corrige automáticamente: `150` → `150,00`, `150.5` → `150,50`, `150.00` → `150,00`.
+
+### `QrCodec` (clase)
+
+Para crear múltiples codificadores/decodificadores o inyectar claves manualmente:
 
 ```ts
-import { QrDecoder } from "decoder-qr-pago-movil";
+import { QrCodec } from "decoder-qr-pago-movil";
 
-const decoder = new QrDecoder({ aesKeys, rsaKeys });
-const result = decoder.decode(payload);
+const codec = new QrCodec({ aesKeys, rsaKeys });
+const result = codec.decode(payload);
+const newPayload = codec.encode({ dni: "12345678", phone: "584120000000", bank: "0114" });
+```
+
+### Tipos
+
+```ts
+export interface QrData {
+  dni: string;
+  phone: string;
+  bank: string;
+  name?: string;
+  amount?: string;
+  description?: string;
+  bdv?: string;
+}
+
+export interface KeyMaps {
+  aesKeys: Record<string, { key: string; iv: string }>;
+  rsaKeys: Record<string, string>;
+}
 ```
 
 ## Formatos
@@ -66,7 +122,8 @@ const result = decoder.decode(payload);
 ## Características
 
 - 58+ bancos compatibles
-- AES-256-CBC + RSA PKCS1 v1.5
+- Decodificación AES-256-CBC + RSA PKCS1 v1.5
+- Codificación AES-256-CBC con validación de montos
 - Sin dependencias nativas (usa `node-forge`)
 - Funciona en cliente (browser) sin bundlers especiales
 - Claves pre-procesadas (no necesita Blowfish en runtime)
