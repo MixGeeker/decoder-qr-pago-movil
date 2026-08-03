@@ -63,6 +63,7 @@ Parsea y descifra el QR. Retorna:
 | `bdv`         | `string` (opcional) | `1234567890123456` |
 
 > El campo `id` del JSON original se mapea a `dni` y se le antepone `V` si no lo trae.
+> El campo `description` no es aceptado por todos los bancos. Verifica con tu entidad antes de usarlo.
 
 ### `encodeQr(data: QrData): string`
 
@@ -79,6 +80,7 @@ Genera un payload QR codificado con AES-256-CBC. `bank` es el código del mercha
 | `bdv`         | string  | No          |
 
 > El `amount` se valida y auto-corrige automáticamente: `150` → `150,00`, `150.5` → `150,50`, `150.00` → `150,00`.
+> El campo `description` no es aceptado por todos los bancos. Verifica con tu entidad antes de usarlo.
 
 ### `QrCodec` (clase)
 

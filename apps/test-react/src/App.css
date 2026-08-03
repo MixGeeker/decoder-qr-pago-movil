@@ -319,6 +319,148 @@ body {
   cursor: not-allowed;
 }
 
+.tabs {
+  display: flex;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+  gap: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: rgba(255,255,255,0.8);
+}
+
+.tab.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+
+.generate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-hint {
+  text-transform: none;
+  color: rgba(255,255,255,0.25);
+  font-style: italic;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23ffffff44' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.form-select option {
+  background: #24243e;
+  color: #fff;
+}
+
+.form-select:focus {
+  border-color: #667eea;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  border-color: #667eea;
+}
+
+.form-input::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+.phone-group {
+  display: flex;
+  gap: 8px;
+}
+
+.phone-prefix {
+  flex: 0 0 100px;
+}
+
+.phone-number {
+  flex: 1;
+}
+
+.form-error {
+  font-size: 11px;
+  color: #fca5a5;
+  padding-left: 4px;
+}
+
+.qr-code-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 16px;
+}
+
+.qr-image {
+  display: block;
+  width: 280px;
+  height: 280px;
+  image-rendering: pixelated;
+}
+
+.generate-result {
+  animation: fadeIn 0.3s ease;
+}
+
 .footer {
   margin-top: auto;
   text-align: center;
