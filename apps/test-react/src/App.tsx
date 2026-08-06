@@ -216,9 +216,7 @@ function App() {
             return;
           }
         }
-        setStatus("error");
-        setError("No se encontró ninguna imagen en el portapapeles.");
-        return;
+        // API succeeded but no image/* found — fall through to mobile paste area
       } catch {
         // fall through to mobile paste area
       }
@@ -324,7 +322,7 @@ function App() {
                     }}
                     suppressContentEditableWarning
                   >
-                    Mantén presionado aquí y selecciona "Pegar"
+                    Mantén presionado aquí y toca "Pegar" para pegar la imagen
                   </div>
                 )}
                 <input
