@@ -19,6 +19,7 @@ function App() {
   const inputRef = useRef<HTMLInputElement>(null);
   const deferredPrompt = useRef<any>(null);
   const [installable, setInstallable] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -28,6 +29,14 @@ function App() {
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(display-mode: standalone)");
+    setIsInstalled(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsInstalled(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, []);
 
   const handleInstall = async () => {
@@ -222,9 +231,11 @@ function App() {
       <header className="header">
         <h1>QR Pago Móvil</h1>
         <p>Decodifica y genera códigos QR de pago móvil venezolano</p>
-        <button className="install-btn" onClick={handleInstall} type="button">
-          ⬇ Instalar app
-        </button>
+        {!isInstalled && (
+          <button className="install-btn" onClick={handleInstall} type="button">
+            ⬇ Instalar app
+          </button>
+        )}
       </header>
 
       <div className="tabs">
