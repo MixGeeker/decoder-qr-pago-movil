@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import { decodeQr } from "decoder-qr-pago-movil";
 import GenerateQrTab from "./GenerateQrTab";
@@ -115,6 +115,54 @@ function App() {
     [processFile],
   );
 
+  const processClipboardBlob = useCallback(
+    (blob: Blob) => {
+      const file = new File([blob], "clipboard.png", { type: blob.type });
+      processFile(file);
+    },
+    [processFile],
+  );
+
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      if (tab !== "decode" || status !== "idle") return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          processClipboardBlob(item.getAsFile()!);
+          return;
+        }
+      }
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, [tab, status, processClipboardBlob]);
+
+  const handlePasteButton = async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const item of clipboardItems) {
+        const imageTypes = item.types.filter((t: string) =>
+          t.startsWith("image/"),
+        );
+        if (imageTypes.length > 0) {
+          const blob = await item.getType(imageTypes[0]);
+          processClipboardBlob(blob);
+          return;
+        }
+      }
+      setStatus("error");
+      setError("No se encontró ninguna imagen en el portapapeles.");
+    } catch {
+      setStatus("error");
+      setError(
+        "No se pudo acceder al portapapeles. Asegúrate de haber copiado una imagen y permite el acceso.",
+      );
+    }
+  };
+
   const handleClick = () => inputRef.current?.click();
 
   const handleReset = () => {
@@ -178,7 +226,20 @@ function App() {
                     ? "Suelta la imagen aquí"
                     : "Toca para seleccionar o arrastra una imagen"}
                 </div>
-                <div className="dropzone-hint">PNG, JPG, WebP — hasta 10 MB</div>
+                <div className="dropzone-hint">
+                  PNG, JPG, WebP — hasta 10 MB
+                </div>
+                <button
+                  className="paste-clipboard-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePasteButton();
+                  }}
+                  type="button"
+                >
+                  📋 Pegar del portapapeles
+                </button>
+                <div className="dropzone-hint">O presiona Ctrl+V para pegar una imagen</div>
                 <input
                   ref={inputRef}
                   type="file"
