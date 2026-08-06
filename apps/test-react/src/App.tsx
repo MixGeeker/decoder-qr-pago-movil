@@ -17,9 +17,11 @@ function App() {
   const [dragging, setDragging] = useState(false);
   const [payloadText, setPayloadText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const pasteAreaRef = useRef<HTMLDivElement>(null);
   const deferredPrompt = useRef<any>(null);
   const [installable, setInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [showMobilePaste, setShowMobilePaste] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -179,27 +181,53 @@ function App() {
     return () => document.removeEventListener("paste", onPaste);
   }, [tab, status, processClipboardBlob]);
 
-  const handlePasteButton = async () => {
-    try {
-      const clipboardItems = await navigator.clipboard.read();
-      for (const item of clipboardItems) {
-        const imageTypes = item.types.filter((t: string) =>
-          t.startsWith("image/"),
-        );
-        if (imageTypes.length > 0) {
-          const blob = await item.getType(imageTypes[0]);
-          processClipboardBlob(blob);
+  const handleMobilePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          processClipboardBlob(item.getAsFile()!);
+          setShowMobilePaste(false);
           return;
         }
       }
       setStatus("error");
       setError("No se encontró ninguna imagen en el portapapeles.");
-    } catch {
-      setStatus("error");
-      setError(
-        "No se pudo acceder al portapapeles. Asegúrate de haber copiado una imagen y permite el acceso.",
-      );
+      setShowMobilePaste(false);
+    },
+    [processClipboardBlob],
+  );
+
+  const handlePasteButton = async () => {
+    setShowMobilePaste(false);
+
+    if (navigator.clipboard?.read) {
+      try {
+        const clipboardItems = await navigator.clipboard.read();
+        for (const item of clipboardItems) {
+          const imageTypes = item.types.filter((t: string) =>
+            t.startsWith("image/"),
+          );
+          if (imageTypes.length > 0) {
+            const blob = await item.getType(imageTypes[0]);
+            processClipboardBlob(blob);
+            return;
+          }
+        }
+        setStatus("error");
+        setError("No se encontró ninguna imagen en el portapapeles.");
+        return;
+      } catch {
+        // fall through to mobile paste area
+      }
     }
+
+    setShowMobilePaste(true);
+    setTimeout(() => {
+      pasteAreaRef.current?.focus();
+    }, 100);
   };
 
   const handleClick = () => inputRef.current?.click();
@@ -284,6 +312,21 @@ function App() {
                   📋 Pegar del portapapeles
                 </button>
                 <div className="dropzone-hint">También puedes presionar Ctrl+V para pegar una imagen</div>
+                {showMobilePaste && (
+                  <div
+                    ref={pasteAreaRef}
+                    contentEditable
+                    className="mobile-paste-area"
+                    onPaste={handleMobilePaste}
+                    onBlur={() => setShowMobilePaste(false)}
+                    onInput={(e) => {
+                      e.currentTarget.textContent = "";
+                    }}
+                    suppressContentEditableWarning
+                  >
+                    Mantén presionado aquí y selecciona "Pegar"
+                  </div>
+                )}
                 <input
                   ref={inputRef}
                   type="file"
@@ -312,23 +355,7 @@ function App() {
                 </button>
               </div>
 
-              <div className="result-card" style={{ opacity: 0.5 }}>
-                <div className="result-header">
-                  <div className="result-header-icon">?</div>
-                  <div className="result-header-title">Esperando imagen</div>
-                </div>
-                {["DNI", "Teléfono", "Banco", "Titular"].map((label) => (
-                  <div className="result-field" key={label}>
-                    <span className="result-field-label">{label}</span>
-                    <span
-                      className="result-field-value"
-                      style={{ color: "rgba(255,255,255,0.2)" }}
-                    >
-                      —
-                    </span>
-                  </div>
-                ))}
-              </div>
+
             </>
           )}
 

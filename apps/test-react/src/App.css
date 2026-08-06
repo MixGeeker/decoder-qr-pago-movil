@@ -24,7 +24,7 @@ body {
 .app {
   max-width: 480px;
   margin: 0 auto;
-  padding: 20px 16px 40px;
+  padding: 16px 16px 24px;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -32,7 +32,7 @@ body {
 
 .header {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .header h1 {
@@ -512,10 +512,89 @@ body {
   border-color: #667eea;
 }
 
+.mobile-paste-area {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 2px solid #667eea;
+  border-radius: 10px;
+  background: rgba(102, 126, 234, 0.08);
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+  cursor: text;
+  animation: fadeIn 0.2s ease;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-break: break-all;
+}
+
+.mobile-paste-area:focus {
+  border-color: #764ba2;
+  background: rgba(118, 75, 162, 0.12);
+}
+
 .footer {
   margin-top: auto;
   text-align: center;
-  padding-top: 32px;
+  padding-top: 24px;
   font-size: 13px;
   color: rgba(255,255,255,0.2);
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 12px 12px 16px;
+    min-height: unset;
+  }
+
+  .header {
+    margin-bottom: 14px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+  }
+
+  .header p {
+    font-size: 14px;
+  }
+
+  .install-btn {
+    margin-top: 10px;
+    padding: 10px 22px;
+    font-size: 14px;
+  }
+
+  .tabs {
+    margin-bottom: 16px;
+  }
+
+  .dropzone {
+    padding: 24px 16px;
+    margin-bottom: 16px;
+  }
+
+  .dropzone-icon {
+    font-size: 38px;
+    margin-bottom: 8px;
+  }
+
+  .divider {
+    margin: 16px 0;
+  }
+
+  .paste-area {
+    margin-bottom: 16px;
+  }
+
+  .result-card {
+    padding: 16px;
+  }
+
+  .footer {
+    padding-top: 16px;
+  }
 }
