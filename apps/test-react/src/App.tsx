@@ -17,11 +17,11 @@ function App() {
   const [dragging, setDragging] = useState(false);
   const [payloadText, setPayloadText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const pasteAreaRef = useRef<HTMLDivElement>(null);
+  const dropzoneRef = useRef<HTMLDivElement>(null);
   const deferredPrompt = useRef<any>(null);
   const [installable, setInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [showMobilePaste, setShowMobilePaste] = useState(false);
+  const [pasteMode, setPasteMode] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -181,28 +181,77 @@ function App() {
     return () => document.removeEventListener("paste", onPaste);
   }, [tab, status, processClipboardBlob]);
 
-  const handleMobilePaste = useCallback(
+  const handleDropzonePaste = useCallback(
     (e: React.ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      for (const item of items) {
-        if (item.type.startsWith("image/")) {
-          e.preventDefault();
-          processClipboardBlob(item.getAsFile()!);
-          setShowMobilePaste(false);
-          return;
+      e.preventDefault();
+
+      if (e.clipboardData.files?.length) {
+        for (const file of e.clipboardData.files) {
+          if (file.type.startsWith("image/")) {
+            processClipboardBlob(file);
+            exitPasteMode();
+            return;
+          }
         }
       }
+
+      const items = e.clipboardData.items;
+      if (items) {
+        for (const item of items) {
+          if (item.type.startsWith("image/")) {
+            processClipboardBlob(item.getAsFile()!);
+            exitPasteMode();
+            return;
+          }
+        }
+      }
+
+      // Last resort: check if HTML paste contains an img
+      const html = e.clipboardData.getData("text/html");
+      if (html) {
+        const match = html.match(/<img[^>]+src="([^"]+)"/i);
+        if (match) {
+          const src = match[1];
+          if (src.startsWith("data:image/")) {
+            fetch(src)
+              .then((r) => r.blob())
+              .then((blob) => {
+                processClipboardBlob(blob);
+              })
+              .catch(() => {
+                setStatus("error");
+                setError("No se pudo cargar la imagen del portapapeles.");
+              });
+            exitPasteMode();
+            return;
+          }
+        }
+      }
+
       setStatus("error");
-      setError("No se encontró ninguna imagen en el portapapeles.");
-      setShowMobilePaste(false);
+      setError(
+        "No se encontró ninguna imagen. Copia una imagen primero y vuelve a intentar.",
+      );
+      exitPasteMode();
     },
     [processClipboardBlob],
   );
 
-  const handlePasteButton = async () => {
-    setShowMobilePaste(false);
+  const enterPasteMode = () => {
+    setPasteMode(true);
+    setTimeout(() => {
+      dropzoneRef.current?.focus();
+    }, 100);
+  };
 
+  const exitPasteMode = () => {
+    setPasteMode(false);
+    if (dropzoneRef.current) {
+      dropzoneRef.current.textContent = "";
+    }
+  };
+
+  const handlePasteButton = async () => {
     if (navigator.clipboard?.read) {
       try {
         const clipboardItems = await navigator.clipboard.read();
@@ -216,16 +265,11 @@ function App() {
             return;
           }
         }
-        // API succeeded but no image/* found — fall through to mobile paste area
       } catch {
-        // fall through to mobile paste area
+        // fall through to paste mode
       }
     }
-
-    setShowMobilePaste(true);
-    setTimeout(() => {
-      pasteAreaRef.current?.focus();
-    }, 100);
+    enterPasteMode();
   };
 
   const handleClick = () => inputRef.current?.click();
@@ -284,46 +328,52 @@ function App() {
           {status === "idle" && (
             <>
               <div
-                className={`dropzone${dragging ? " dragging" : ""}`}
-                onClick={handleClick}
+                ref={dropzoneRef}
+                className={`dropzone${dragging ? " dragging" : ""}${pasteMode ? " paste-mode" : ""}`}
+                contentEditable={pasteMode}
+                suppressContentEditableWarning
+                tabIndex={pasteMode ? 0 : undefined}
+                onClick={pasteMode ? undefined : handleClick}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
+                onPaste={pasteMode ? handleDropzonePaste : undefined}
+                onBlur={pasteMode ? exitPasteMode : undefined}
+                onInput={
+                  pasteMode
+                    ? (e) => {
+                        e.currentTarget.textContent = "";
+                      }
+                    : undefined
+                }
               >
                 <div className="dropzone-icon">⬡</div>
                 <div className="dropzone-text">
-                  {dragging
-                    ? "Suelta la imagen aquí"
-                    : "Toca para seleccionar o arrastra una imagen"}
+                  {pasteMode
+                    ? "Mantén presionado y toca Pegar"
+                    : dragging
+                      ? "Suelta la imagen aquí"
+                      : "Toca para seleccionar o arrastra una imagen"}
                 </div>
-                <div className="dropzone-hint">
-                  PNG, JPG, WebP — hasta 10 MB
-                </div>
-                <button
-                  className="paste-clipboard-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePasteButton();
-                  }}
-                  type="button"
-                >
-                  📋 Pegar del portapapeles
-                </button>
-                <div className="dropzone-hint">También puedes presionar Ctrl+V para pegar una imagen</div>
-                {showMobilePaste && (
-                  <div
-                    ref={pasteAreaRef}
-                    contentEditable
-                    className="mobile-paste-area"
-                    onPaste={handleMobilePaste}
-                    onBlur={() => setShowMobilePaste(false)}
-                    onInput={(e) => {
-                      e.currentTarget.textContent = "";
-                    }}
-                    suppressContentEditableWarning
-                  >
-                    Mantén presionado aquí y toca "Pegar" para pegar la imagen
-                  </div>
+                {!pasteMode && (
+                  <>
+                    <div className="dropzone-hint">
+                      PNG, JPG, WebP — hasta 10 MB
+                    </div>
+                    <button
+                      className="paste-clipboard-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePasteButton();
+                      }}
+                      type="button"
+                    >
+                      📋 Pegar del portapapeles
+                    </button>
+                    <div className="dropzone-hint">
+                      También puedes presionar Ctrl+V para pegar una imagen
+                    </div>
+                  </>
                 )}
                 <input
                   ref={inputRef}

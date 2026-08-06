@@ -92,6 +92,20 @@ body {
   background: rgba(118, 75, 162, 0.12);
 }
 
+.dropzone.paste-mode {
+  border-color: #667eea;
+  border-style: solid;
+  background: rgba(102, 126, 234, 0.1);
+  cursor: text;
+  min-height: 160px;
+}
+
+.dropzone.paste-mode:focus {
+  border-color: #764ba2;
+  background: rgba(118, 75, 162, 0.14);
+  outline: none;
+}
+
 .dropzone-icon {
   font-size: 52px;
   margin-bottom: 12px;
@@ -510,30 +524,6 @@ body {
 .paste-clipboard-btn:hover {
   background: rgba(102, 126, 234, 0.2);
   border-color: #667eea;
-}
-
-.mobile-paste-area {
-  margin-top: 12px;
-  padding: 14px 16px;
-  border: 2px solid #667eea;
-  border-radius: 10px;
-  background: rgba(102, 126, 234, 0.08);
-  color: rgba(255,255,255,0.6);
-  font-size: 14px;
-  text-align: center;
-  outline: none;
-  cursor: text;
-  animation: fadeIn 0.2s ease;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  word-break: break-all;
-}
-
-.mobile-paste-area:focus {
-  border-color: #764ba2;
-  background: rgba(118, 75, 162, 0.12);
 }
 
 .footer {
