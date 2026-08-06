@@ -31,13 +31,21 @@ function App() {
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt.current) return;
-    deferredPrompt.current.prompt();
-    const { outcome } = await deferredPrompt.current.userChoice;
-    if (outcome === "accepted") {
-      setInstallable(false);
+    if (deferredPrompt.current) {
+      deferredPrompt.current.prompt();
+      const { outcome } = await deferredPrompt.current.userChoice;
+      if (outcome === "accepted") {
+        setInstallable(false);
+      }
+      deferredPrompt.current = null;
+    } else {
+      alert(
+        "Para instalar la app:\n\n" +
+          "• Chrome/Edge: menú ⋮ > Instalar aplicación\n" +
+          "• Safari/iOS: menú Compartir > Añadir a pantalla de inicio\n" +
+          "• Firefox: barra de dirección > icono de instalar",
+      );
     }
-    deferredPrompt.current = null;
   };
 
   const decodePayload = useCallback((text: string) => {
@@ -214,11 +222,9 @@ function App() {
       <header className="header">
         <h1>QR Pago Móvil</h1>
         <p>Decodifica y genera códigos QR de pago móvil venezolano</p>
-        {installable && (
-          <button className="install-btn" onClick={handleInstall} type="button">
-            Instalar app
-          </button>
-        )}
+        <button className="install-btn" onClick={handleInstall} type="button">
+          ⬇ Instalar app
+        </button>
       </header>
 
       <div className="tabs">
