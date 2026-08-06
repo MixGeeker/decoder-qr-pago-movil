@@ -239,7 +239,7 @@ function App() {
                 >
                   📋 Pegar del portapapeles
                 </button>
-                <div className="dropzone-hint">O presiona Ctrl+V para pegar una imagen</div>
+                <div className="dropzone-hint">También puedes presionar Ctrl+V para pegar una imagen</div>
                 <input
                   ref={inputRef}
                   type="file"
