@@ -1,4 +1,4 @@
-name: Deploy test-react to Cloudflare Pages
+name: Deploy test-react to Cloudflare Page
 
 on:
   push:
