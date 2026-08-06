@@ -17,6 +17,28 @@ function App() {
   const [dragging, setDragging] = useState(false);
   const [payloadText, setPayloadText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const deferredPrompt = useRef<any>(null);
+  const [installable, setInstallable] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      deferredPrompt.current = e;
+      setInstallable(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt.current) return;
+    deferredPrompt.current.prompt();
+    const { outcome } = await deferredPrompt.current.userChoice;
+    if (outcome === "accepted") {
+      setInstallable(false);
+    }
+    deferredPrompt.current = null;
+  };
 
   const decodePayload = useCallback((text: string) => {
     setRaw(text);
@@ -192,6 +214,11 @@ function App() {
       <header className="header">
         <h1>QR Pago Móvil</h1>
         <p>Decodifica y genera códigos QR de pago móvil venezolano</p>
+        {installable && (
+          <button className="install-btn" onClick={handleInstall} type="button">
+            Instalar app
+          </button>
+        )}
       </header>
 
       <div className="tabs">

@@ -41,6 +41,23 @@ body {
   margin-top: 4px;
 }
 
+.install-btn {
+  margin-top: 12px;
+  padding: 8px 24px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.install-btn:hover {
+  opacity: 0.85;
+}
+
 .dropzone {
   position: relative;
   border: 2px dashed rgba(255,255,255,0.2);
