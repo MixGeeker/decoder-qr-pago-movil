@@ -481,6 +481,14 @@ body {
   flex: 1;
 }
 
+.dni-prefix {
+  flex: 0 0 72px;
+}
+
+.dni-number {
+  flex: 1;
+}
+
 .form-error {
   font-size: 13px;
   color: #fca5a5;

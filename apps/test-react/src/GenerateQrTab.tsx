@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import { encodeQr, bankList } from "decoder-qr-pago-movil";
 
 const PHONE_PREFIXES = ["0412", "0414", "0416", "0424", "0426"] as const;
+const DNI_PREFIXES = ["V", "J", "G"] as const;
 
 const schema = z.object({
   bank: z.string().min(1, "Selecciona un banco"),
@@ -14,6 +15,7 @@ const schema = z.object({
     .string()
     .length(7, "Debe tener 7 dígitos")
     .regex(/^\d{7}$/, "Solo números"),
+  dniPrefix: z.enum(DNI_PREFIXES),
   dni: z
     .string()
     .min(5, "Mínimo 5 dígitos")
@@ -41,6 +43,7 @@ export default function GenerateQrTab() {
       bank: "",
       phonePrefix: "",
       phoneNumber: "",
+      dniPrefix: "V",
       dni: "",
       amount: "",
       description: "",
@@ -53,6 +56,7 @@ export default function GenerateQrTab() {
       const phone = `58${data.phonePrefix.substring(1)}${data.phoneNumber}`;
       const encoded = encodeQr({
         dni: data.dni,
+        prefix: data.dniPrefix,
         phone,
         bank: data.bank,
         ...(data.amount && { amount: data.amount }),
@@ -159,23 +163,38 @@ export default function GenerateQrTab() {
 
           <div className="form-field">
             <label className="form-label">DNI</label>
-            <Controller
-              name="dni"
-              control={control}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="text"
-                  inputMode="numeric"
-                  className="form-input"
-                  placeholder="12345678"
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "");
-                    field.onChange(v);
-                  }}
-                />
-              )}
-            />
+            <div className="phone-group">
+              <Controller
+                name="dniPrefix"
+                control={control}
+                render={({ field }) => (
+                  <select {...field} className="form-select dni-prefix">
+                    {DNI_PREFIXES.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              <Controller
+                name="dni"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="text"
+                    inputMode="numeric"
+                    className="form-input dni-number"
+                    placeholder="12345678"
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "");
+                      field.onChange(v);
+                    }}
+                  />
+                )}
+              />
+            </div>
             {errors.dni && (
               <span className="form-error">{errors.dni.message}</span>
             )}

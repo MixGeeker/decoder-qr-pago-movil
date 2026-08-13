@@ -61,7 +61,7 @@
     },
     "packages/decoder-qr-pago-movil": {
       "name": "decoder-qr-pago-movil",
-      "version": "1.0.9",
+      "version": "1.0.10",
       "dependencies": {
         "blowfish": "^1.0.1",
         "node-forge": "^1.4.0",

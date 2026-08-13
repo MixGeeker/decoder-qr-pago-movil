@@ -9,6 +9,7 @@ export interface QrData {
   dni: string;
   phone: string;
   bank: MerchantId;
+  prefix?: string;
   name?: string;
   amount?: string;
   description?: string;
@@ -23,7 +24,7 @@ export interface KeyMaps {
 function normalize(raw: Record<string, any>): QrData {
   const id = String(raw.id ?? "");
   return {
-    dni: id.startsWith("V") ? id : "V" + id,
+    dni: /^[A-Za-z]/.test(id) ? id : DEFAULT_DNI_PREFIX + id,
     phone: String(raw.phone ?? ""),
     bank: String(raw.bank ?? "") as MerchantId,
     name: String(raw.name ?? ""),
@@ -85,19 +86,21 @@ function aesEncrypt(
 }
 
 function parseDni(dni: string): string {
-  const match = /^([A-Za-z])?(\d+)$/.exec(dni);
+  const match = /^(\d+)$/.exec(dni);
   if (!match) {
-    throw new Error(
-      `DNI inválido: "${dni}". El formato debe ser una letra de prefijo seguida de dígitos.`,
-    );
+    throw new Error(`DNI inválido: "${dni}". Debe contener solo dígitos.`);
   }
-  const prefix = match[1] ? match[1].toUpperCase() : "";
-  if (prefix && !ALLOWED_DNI_PREFIXES.has(prefix)) {
+  return match[1] ?? "";
+}
+
+function resolvePrefix(prefix: string | undefined): string {
+  const normalized = (prefix ?? DEFAULT_DNI_PREFIX).toUpperCase();
+  if (!ALLOWED_DNI_PREFIXES.has(normalized)) {
     throw new Error(
       `Prefijo de DNI no admitido: "${prefix}". Prefijos válidos: ${[...ALLOWED_DNI_PREFIXES].join(", ")}.`,
     );
   }
-  return match[2] ?? "";
+  return normalized;
 }
 
 export class QrCodec {
@@ -121,10 +124,10 @@ export class QrCodec {
 
   encode(data: QrData): string {
     const merchantId = data.bank;
-
     const dniNumber = parseDni(data.dni);
+    const prefix = resolvePrefix(data.prefix);
     const json: Record<string, string> = {
-      id: DEFAULT_DNI_PREFIX + dniNumber,
+      id: prefix + dniNumber,
       phone: data.phone,
       bank: merchantId,
       ...(data.name && { name: data.name }),

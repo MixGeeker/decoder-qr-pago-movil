@@ -59,12 +59,26 @@ describe("encodeQr + decodeQr round-trip", () => {
     expect(decoded.bdv).toBe("1234567890123456");
   });
 
-  it("dni con prefijo V se limpia y se re-agrega", () => {
+  it("dni con letra lanza error (solo dígitos)", () => {
     const data = { dni: "V12345678", phone: "584120000000", bank: "0114" as const };
-    const payload = encodeQr(data);
-    const decoded = decodeQr(payload);
+    expect(() => encodeQr(data)).toThrow("solo dígitos");
+  });
 
+  it("prefix opcional: por defecto V", () => {
+    const data = { dni: "12345678", phone: "584120000000", bank: "0114" as const };
+    const decoded = decodeQr(encodeQr(data));
     expect(decoded.dni).toBe("V12345678");
+  });
+
+  it("prefix J se respeta", () => {
+    const data = { dni: "12345678", phone: "584120000000", bank: "0114" as const, prefix: "J" };
+    const decoded = decodeQr(encodeQr(data));
+    expect(decoded.dni).toBe("J12345678");
+  });
+
+  it("prefix inválido lanza error", () => {
+    const data = { dni: "12345678", phone: "584120000000", bank: "0114" as const, prefix: "X" };
+    expect(() => encodeQr(data)).toThrow("Prefijo de DNI no admitido");
   });
 
   it("dni sin prefijo V se agrega en decode", () => {
