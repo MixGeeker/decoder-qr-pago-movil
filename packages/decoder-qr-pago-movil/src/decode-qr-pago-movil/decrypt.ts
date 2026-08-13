@@ -1,6 +1,7 @@
 import forge from "node-forge";
 import type { aesKeys } from "./keys-processed";
 import { validateAmount } from "./helpers/validate-amount";
+import { ALLOWED_DNI_PREFIXES, DEFAULT_DNI_PREFIX } from "./dni-prefixes";
 
 export type MerchantId = keyof typeof aesKeys;
 
@@ -83,6 +84,22 @@ function aesEncrypt(
   return forge.util.encode64(cipher.output.getBytes());
 }
 
+function parseDni(dni: string): string {
+  const match = /^([A-Za-z])?(\d+)$/.exec(dni);
+  if (!match) {
+    throw new Error(
+      `DNI inválido: "${dni}". El formato debe ser una letra de prefijo seguida de dígitos.`,
+    );
+  }
+  const prefix = match[1] ? match[1].toUpperCase() : "";
+  if (prefix && !ALLOWED_DNI_PREFIXES.has(prefix)) {
+    throw new Error(
+      `Prefijo de DNI no admitido: "${prefix}". Prefijos válidos: ${[...ALLOWED_DNI_PREFIXES].join(", ")}.`,
+    );
+  }
+  return match[2] ?? "";
+}
+
 export class QrCodec {
   constructor(private keys: KeyMaps) {}
 
@@ -104,8 +121,10 @@ export class QrCodec {
 
   encode(data: QrData): string {
     const merchantId = data.bank;
+
+    const dniNumber = parseDni(data.dni);
     const json: Record<string, string> = {
-      id: data.dni.startsWith("V") ? data.dni.substring(1) : data.dni,
+      id: DEFAULT_DNI_PREFIX + dniNumber,
       phone: data.phone,
       bank: merchantId,
       ...(data.name && { name: data.name }),
